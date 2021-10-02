@@ -4,14 +4,13 @@
 // You can read more about it at https://doc.rust-lang.org/std/str/trait.FromStr.html
 use std::error;
 use std::str::FromStr;
-
+use std::fmt;
 #[derive(Debug)]
 struct Person {
     name: String,
     age: usize,
 }
 
-// I AM NOT DONE
 
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
@@ -23,9 +22,62 @@ struct Person {
 // 5. If while extracting the name and the age something goes wrong, an error should be returned
 // If everything goes well, then return a Result of a Person object
 
+#[derive(Debug)]
+struct AgeNotNumber;
+impl error::Error for AgeNotNumber {}
+
+impl fmt::Display for AgeNotNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "myerr")
+    }
+}
+
+#[derive(Debug)]
+struct LengthErr;
+impl error::Error for LengthErr {}
+
+impl fmt::Display for LengthErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "length must be two")
+    }
+}
+
+#[derive(Debug)]
+struct NameIsEmpty;
+impl error::Error for NameIsEmpty {}
+
+impl fmt::Display for NameIsEmpty {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "length must be two")
+    }
+}
+
 impl FromStr for Person {
     type Err = Box<dyn error::Error>;
     fn from_str(s: &str) -> Result<Person, Self::Err> {
+        let arr: Vec<&str> = s.split(',').collect();
+        let mut person = Person{
+            name: "".to_owned(),
+            age: 0
+        };
+        match arr.len() {
+            2 => {  
+                let name = arr[0].to_string();
+                if name == "" { return Err(Box::new(NameIsEmpty));} 
+                let age: usize = match arr[1].parse::<usize>() {
+                    Ok(i) => {
+                        i
+                    },
+                    Err(_) => {
+                        return Err(Box::new(AgeNotNumber));
+                    }
+                };
+                person.name = name;
+                person.age = age;
+                Ok(person)
+            },
+            _ => {return Err(Box::new(LengthErr));}
+        }
     }
 }
 
